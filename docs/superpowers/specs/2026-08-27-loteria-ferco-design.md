@@ -80,7 +80,9 @@ waiting → playing → verifying → waiting (reinicio)
 - El resto (UI, tiempo real) se prueba a mano en navegador antes de dar
   por listo.
 
-## Pendiente de confirmar con el usuario antes de implementar
+## Decisiones confirmadas (2026-08-27)
 
-- Permiso para descargar ~16 imágenes de ferco.com.gt al repo.
-- Permiso para hacer push del primer commit al repo GitHub.
+- Supabase: se reutiliza el proyecto existente `giancaremma50-hue's Project`
+  (id `fcqomskbbyvqhtlgqlai`), tablas con prefijo `loteria_`. Sin costo extra.
+- Imágenes: se descargan de ferco.com.gt a `/public/images/deck`.
+- Push a GitHub: autorizado, normal a medida que se avanza.
