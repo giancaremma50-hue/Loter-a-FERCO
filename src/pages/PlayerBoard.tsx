@@ -13,6 +13,7 @@ export default function PlayerBoard() {
   const { room, players, playersLoaded, notFound, updateLocalPlayer } =
     useRoomRealtime(code);
   const [template, setTemplate] = useState<CardTemplate | null>(null);
+  const [wonAt, setWonAt] = useState<string | null>(null);
   const [dismissedAt, setDismissedAt] = useState<string | null>(null);
 
   const playerId = code ? localStorage.getItem(`loteria:${code}`) : null;
@@ -42,11 +43,31 @@ export default function PlayerBoard() {
   // El tablero ya tiene cartón + marcas + fichas sacadas en vivo: detecta la
   // lotería solo, sin esperar que el jugador toque un botón.
   useEffect(() => {
-    if (!me || !template || !room || me.shouted_at) return;
+    if (!me || !template || !room || wonAt) return;
+    if (me.shouted_at) {
+      // Recupera la celebración si el jugador recargó la página a mitad
+      // de la verificación del admin.
+      setWonAt(me.shouted_at);
+      return;
+    }
     const won = checkWin(template.grid, me.marks, room.drawn_pieces, room.pattern);
-    if (won) shoutLoteria();
+    if (won) {
+      // Marca local primero: la celebración no depende de que
+      // shouted_at siga en la base — si el admin confirma/rechaza antes
+      // de que el jugador la cierre, no se le corta la pantalla.
+      setWonAt(new Date().toISOString());
+      shoutLoteria();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [me, template, room]);
+  }, [me, template, room, wonAt]);
+
+  // Nueva ronda (el admin reinició): limpia el estado de celebración local.
+  useEffect(() => {
+    if (room?.status === "waiting") {
+      setWonAt(null);
+      setDismissedAt(null);
+    }
+  }, [room?.status]);
 
   async function toggleCell(i: number) {
     if (!me) return;
@@ -65,7 +86,7 @@ export default function PlayerBoard() {
     );
   if (!template) return <main className="state-message">Cargando tu cartón...</main>;
 
-  const showCelebration = Boolean(me.shouted_at) && dismissedAt !== me.shouted_at;
+  const showCelebration = Boolean(wonAt) && dismissedAt !== wonAt;
 
   return (
     <main>
@@ -83,7 +104,7 @@ export default function PlayerBoard() {
       {showCelebration && (
         <WinCelebration
           playerName={me.name}
-          onDismiss={() => setDismissedAt(me.shouted_at)}
+          onDismiss={() => setDismissedAt(wonAt)}
         />
       )}
     </main>

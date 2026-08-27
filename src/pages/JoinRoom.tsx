@@ -22,6 +22,18 @@ export default function JoinRoom() {
       .then(({ data }) => setTemplates((data ?? []) as CardTemplate[]));
   }, []);
 
+  // Si este dispositivo ya se unió a esta sala (localStorage), no lo
+  // volvemos a mandar a elegir cartón — directo a su tablero. Sin esto,
+  // volver a abrir el link de unirse (p. ej. después de un reinicio de
+  // ronda) mostraba el catálogo de nuevo como si fuera alguien nuevo.
+  useEffect(() => {
+    if (!room) return;
+    const existingId = localStorage.getItem(`loteria:${room.code}`);
+    if (existingId && players.some((p) => p.id === existingId)) {
+      navigate(`/sala/${room.code}`, { replace: true });
+    }
+  }, [room, players, navigate]);
+
   // Un cartón ya tomado por otro jugador de esta sala deja de ofrecerse —
   // así evitamos que dos personas elijan el mismo a simple vista.
   const takenIds = useMemo(
