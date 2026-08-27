@@ -9,8 +9,10 @@ import type { CardTemplate, Pattern } from "../types";
 
 export default function AdminPanel() {
   const { code } = useParams<{ code: string }>();
-  const { room, players, playersLoaded, notFound } = useRoomRealtime(code);
+  const { room, players, playersLoaded, notFound, updateLocalRoom } =
+    useRoomRealtime(code);
   const [templatesById, setTemplatesById] = useState<Record<number, CardTemplate>>({});
+  const [templatesLoaded, setTemplatesLoaded] = useState(false);
 
   useEffect(() => {
     supabase
@@ -20,6 +22,7 @@ export default function AdminPanel() {
         const map: Record<number, CardTemplate> = {};
         for (const t of (data ?? []) as CardTemplate[]) map[t.id] = t;
         setTemplatesById(map);
+        setTemplatesLoaded(true);
       });
   }, []);
 
@@ -40,9 +43,14 @@ export default function AdminPanel() {
     );
     if (remaining.length === 0) return;
     const next = remaining[Math.floor(Math.random() * remaining.length)];
+    const drawn_pieces = [...room!.drawn_pieces, next];
+    // Local primero: si no, dos clics rápidos leen el mismo drawn_pieces
+    // viejo y el segundo pisa al primero (misma clase de bug que el
+    // toggle de marcas en PlayerBoard).
+    updateLocalRoom({ drawn_pieces });
     await supabase
       .from("loteria_rooms")
-      .update({ drawn_pieces: [...room!.drawn_pieces, next] })
+      .update({ drawn_pieces })
       .eq("id", room!.id);
   }
 
@@ -108,7 +116,14 @@ export default function AdminPanel() {
         />
       )}
 
-      {shouting.length > 0 && (
+      {shouting.length > 0 && !templatesLoaded && (
+        <section>
+          <h2>¡Gritaron lotería!</h2>
+          <p>Cargando cartones para verificar...</p>
+        </section>
+      )}
+
+      {shouting.length > 0 && templatesLoaded && (
         <section>
           <h2>¡Gritaron lotería!</h2>
           {shouting.map((p) => {

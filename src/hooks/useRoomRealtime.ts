@@ -98,5 +98,16 @@ export function useRoomRealtime(roomCode: string | undefined) {
     });
   }
 
-  return { room, players, playersLoaded, notFound, updateLocalPlayer };
+  function updateLocalRoom(patch: Partial<Room>) {
+    setRoom((prev) => (prev ? { ...prev, ...patch } : prev));
+  }
+
+  return {
+    room,
+    players,
+    playersLoaded,
+    notFound,
+    updateLocalPlayer,
+    updateLocalRoom,
+  };
 }
