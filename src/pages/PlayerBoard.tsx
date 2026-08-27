@@ -7,7 +7,8 @@ import type { CardTemplate } from "../types";
 
 export default function PlayerBoard() {
   const { code } = useParams<{ code: string }>();
-  const { room, players } = useRoomRealtime(code);
+  const { room, players, playersLoaded, notFound, updateLocalPlayer } =
+    useRoomRealtime(code);
   const [template, setTemplate] = useState<CardTemplate | null>(null);
 
   const playerId = code ? localStorage.getItem(`loteria:${code}`) : null;
@@ -30,6 +31,9 @@ export default function PlayerBoard() {
     if (!me) return;
     const marks = [...me.marks];
     marks[i] = !marks[i];
+    // Actualiza el estado local antes del round-trip: si no, dos clics
+    // rápidos leen el mismo `me.marks` viejo y el segundo pisa al primero.
+    updateLocalPlayer(me.id, { marks });
     await supabase.from("loteria_players").update({ marks }).eq("id", me.id);
   }
 
@@ -41,7 +45,8 @@ export default function PlayerBoard() {
       .eq("id", me.id);
   }
 
-  if (!code || !room) return <main>Cargando sala...</main>;
+  if (notFound) return <main>Sala no encontrada. Revisá el código.</main>;
+  if (!code || !room || !playersLoaded) return <main>Cargando sala...</main>;
   if (!me) return <main>No estás en esta sala. Unite desde el link del admin.</main>;
   if (!template) return <main>Cargando tu cartón...</main>;
 
