@@ -1,4 +1,4 @@
-const IMAGE_COUNT = 24;
+const IMAGE_COUNT = 36;
 const CARD_SLOTS = 16;
 const TEMPLATE_COUNT = 100;
 

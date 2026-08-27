@@ -29,6 +29,18 @@ export const DECK_IMAGES: DeckImage[] = [
   { key: "grifo-piazza", label: "Grifo Piazza", src: "/images/deck/grifo-piazza.jpg" },
   { key: "grifo-indus", label: "Grifo Indus negro", src: "/images/deck/grifo-indus.jpg" },
   { key: "asiento-inodoro", label: "Asiento de inodoro", src: "/images/deck/asiento-inodoro.jpg" },
+  { key: "fachaleta-lume-musk", label: "Fachaleta Lume Musk", src: "/images/deck/fachaleta-lume-musk.jpg" },
+  { key: "mosaico-bianco", label: "Mosaico Bianco", src: "/images/deck/mosaico-bianco.jpg" },
+  { key: "tribe-gris", label: "Tribe Gris", src: "/images/deck/tribe-gris.jpg" },
+  { key: "dent-serena", label: "Dent Serena Rock Mix", src: "/images/deck/dent-serena.jpg" },
+  { key: "nival-carrara", label: "Nival Carrara Mármol", src: "/images/deck/nival-carrara.jpg" },
+  { key: "maven-beige", label: "Maven Beige Mate", src: "/images/deck/maven-beige.jpg" },
+  { key: "toile-de-rex", label: "Toile de Rex Renoir", src: "/images/deck/toile-de-rex.jpg" },
+  { key: "orbit-terrazo", label: "Orbit Terrazo", src: "/images/deck/orbit-terrazo.jpg" },
+  { key: "fachaleta-lume-green", label: "Fachaleta Lume Green", src: "/images/deck/fachaleta-lume-green.jpg" },
+  { key: "viroc-blanco", label: "Viroc Blanco", src: "/images/deck/viroc-blanco.jpg" },
+  { key: "pegamix", label: "Pegamix", src: "/images/deck/pegamix.jpg" },
+  { key: "impermeabilizante", label: "Impermeabilizante", src: "/images/deck/impermeabilizante.jpg" },
 ];
 
 export const CARD_SLOTS = 16;
