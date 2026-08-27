@@ -58,28 +58,36 @@ export default function JoinRoom() {
     navigate(`/sala/${room.code}`);
   }
 
-  if (notFound) return <main>Sala no encontrada. Revisá el código.</main>;
-  if (!room) return <main>Cargando...</main>;
+  if (notFound) return <main className="state-message">Sala no encontrada. Revisá el código.</main>;
+  if (!room) return <main className="state-message">Cargando...</main>;
 
   return (
     <main>
-      <h1>Unirse a la sala {room.code}</h1>
-      <input
-        placeholder="Tu nombre"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
-      <h2>Elegí tu cartón</h2>
-      <TemplateCatalog
-        templates={templates}
-        selectedId={selectedId}
-        onSelect={setSelectedId}
-      />
-      <p>
-        <button onClick={handleJoin} disabled={joining || !name.trim()}>
+      <h1>Sala {room.code}</h1>
+      <p className="subtitle">Poné tu nombre y elegí tu cartón para jugar.</p>
+
+      <div className="panel">
+        <label className="field">
+          <span className="field-label">Tu nombre</span>
+          <input
+            className="input"
+            placeholder="Ej. Ana López"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </label>
+
+        <h2>Elegí tu cartón</h2>
+        <TemplateCatalog
+          templates={templates}
+          selectedId={selectedId}
+          onSelect={setSelectedId}
+        />
+
+        <button className="block" onClick={handleJoin} disabled={joining || !name.trim()}>
           {selectedId ? "Confirmar cartón" : "Sorpréndeme (aleatorio)"}
         </button>
-      </p>
+      </div>
     </main>
   );
 }

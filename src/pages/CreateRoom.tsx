@@ -29,36 +29,40 @@ export default function CreateRoom() {
 
   return (
     <main>
-      <h1>Lotería FERCO — Crear sala</h1>
-      <label>
-        País{" "}
-        <select value={country} onChange={(e) => setCountry(e.target.value)}>
-          <option value="GT">Guatemala</option>
-          <option value="SV">El Salvador</option>
-          <option value="HN">Honduras</option>
-          <option value="MX">México</option>
-        </select>
-      </label>
-      <p>
-        <button onClick={handleCreate} disabled={creating}>
+      <h1>Lotería FERCO</h1>
+      <p className="subtitle">Creá una sala para tu equipo y compartí el código.</p>
+
+      <div className="panel">
+        <label className="field">
+          <span className="field-label">País</span>
+          <select
+            className="select"
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+          >
+            <option value="GT">Guatemala</option>
+            <option value="SV">El Salvador</option>
+            <option value="HN">Honduras</option>
+            <option value="MX">México</option>
+          </select>
+        </label>
+        <button className="block" onClick={handleCreate} disabled={creating}>
           {creating ? "Creando..." : "Crear sala"}
         </button>
-      </p>
+      </div>
+
       {code && (
-        <section>
-          <p>
-            Código: <strong>{code}</strong>
+        <div className="panel room-code">
+          <span className="field-label">Código de sala</span>
+          <div className="code-value">{code}</div>
+          {qrDataUrl && <img src={qrDataUrl} alt="QR para unirse" width={200} height={200} />}
+          <p className="join-link">
+            {window.location.origin}/unirse/{code}
           </p>
-          {qrDataUrl && (
-            <img src={qrDataUrl} alt="QR para unirse" width={220} height={220} />
-          )}
-          <p>
-            Link: {window.location.origin}/unirse/{code}
-          </p>
-          <button onClick={() => navigate(`/sala/${code}/admin`)}>
+          <button className="block" onClick={() => navigate(`/sala/${code}/admin`)}>
             Ir al panel de admin
           </button>
-        </section>
+        </div>
       )}
     </main>
   );

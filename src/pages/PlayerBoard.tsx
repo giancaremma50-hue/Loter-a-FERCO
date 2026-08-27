@@ -45,17 +45,25 @@ export default function PlayerBoard() {
       .eq("id", me.id);
   }
 
-  if (notFound) return <main>Sala no encontrada. Revisá el código.</main>;
-  if (!code || !room || !playersLoaded) return <main>Cargando sala...</main>;
-  if (!me) return <main>No estás en esta sala. Unite desde el link del admin.</main>;
-  if (!template) return <main>Cargando tu cartón...</main>;
+  if (notFound) return <main className="state-message">Sala no encontrada. Revisá el código.</main>;
+  if (!code || !room || !playersLoaded)
+    return <main className="state-message">Cargando sala...</main>;
+  if (!me)
+    return (
+      <main className="state-message">No estás en esta sala. Unite desde el link del admin.</main>
+    );
+  if (!template) return <main className="state-message">Cargando tu cartón...</main>;
 
   return (
     <main>
-      <h1>Sala {room.code}</h1>
-      <p>Fichas llamadas: {room.drawn_pieces.length} / 16</p>
+      <div className="status-bar">
+        <span className="room-tag">Sala {room.code}</span>
+        <span className="count">Fichas llamadas: {room.drawn_pieces.length} / 16</span>
+      </div>
       <CardGrid grid={template.grid} marks={me.marks} onToggle={toggleCell} />
-      <button onClick={shoutLoteria}>¡LOTERÍA!</button>
+      <button className="shout" onClick={shoutLoteria}>
+        ¡Lotería!
+      </button>
     </main>
   );
 }

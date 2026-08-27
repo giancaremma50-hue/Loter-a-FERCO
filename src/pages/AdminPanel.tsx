@@ -26,8 +26,8 @@ export default function AdminPanel() {
       });
   }, []);
 
-  if (notFound) return <main>Sala no encontrada.</main>;
-  if (!room || !playersLoaded) return <main>Cargando sala...</main>;
+  if (notFound) return <main className="state-message">Sala no encontrada.</main>;
+  if (!room || !playersLoaded) return <main className="state-message">Cargando sala...</main>;
 
   async function setPattern(pattern: Pattern) {
     await supabase.from("loteria_rooms").update({ pattern }).eq("id", room!.id);
@@ -76,78 +76,86 @@ export default function AdminPanel() {
 
   return (
     <main>
-      <h1>Admin — sala {room.code}</h1>
+      <h1>Sala {room.code}</h1>
+      <p className="subtitle">Panel de administración</p>
 
-      <section>
+      <div className="panel">
         <h2>Jugadores ({players.length})</h2>
-        <ul>
-          {players.map((p) => (
-            <li key={p.id}>{p.name}</li>
-          ))}
-        </ul>
-      </section>
+        {players.length === 0 ? (
+          <p className="subtitle">Todavía no se unió nadie.</p>
+        ) : (
+          <ul className="roster">
+            {players.map((p) => (
+              <li key={p.id}>{p.name}</li>
+            ))}
+          </ul>
+        )}
+      </div>
 
-      <section>
+      <div className="panel">
         <h2>Patrón de la ronda</h2>
-        {(["linea", "esquinas", "lleno"] as Pattern[]).map((p) => (
-          <label key={p} style={{ marginRight: 12 }}>
-            <input
-              type="radio"
-              name="pattern"
-              checked={room.pattern === p}
-              onChange={() => setPattern(p)}
-            />{" "}
-            {p}
-          </label>
-        ))}
-      </section>
+        <div className="pattern-picker">
+          {(["linea", "esquinas", "lleno"] as Pattern[]).map((p) => (
+            <label key={p}>
+              <input
+                type="radio"
+                name="pattern"
+                checked={room.pattern === p}
+                onChange={() => setPattern(p)}
+              />
+              {p}
+            </label>
+          ))}
+        </div>
 
-      {room.status === "waiting" && (
-        <p>
-          <button onClick={startGame}>Iniciar partida</button>
-        </p>
-      )}
+        {room.status === "waiting" && (
+          <button className="block" onClick={startGame}>
+            Iniciar partida
+          </button>
+        )}
 
-      {room.status === "playing" && (
-        <Tombola
-          drawnPieces={room.drawn_pieces}
-          onDraw={drawPiece}
-          disabled={room.drawn_pieces.length >= DECK_IMAGES.length}
-        />
-      )}
+        {room.status === "playing" && (
+          <Tombola
+            drawnPieces={room.drawn_pieces}
+            onDraw={drawPiece}
+            disabled={room.drawn_pieces.length >= DECK_IMAGES.length}
+          />
+        )}
+      </div>
 
-      {shouting.length > 0 && !templatesLoaded && (
-        <section>
+      {shouting.length > 0 && (
+        <div className="panel">
           <h2>¡Gritaron lotería!</h2>
-          <p>Cargando cartones para verificar...</p>
-        </section>
+          {!templatesLoaded ? (
+            <p className="subtitle">Cargando cartones para verificar...</p>
+          ) : (
+            shouting.map((p) => {
+              const template = p.template_id ? templatesById[p.template_id] : null;
+              const valid = Boolean(
+                template &&
+                  checkWin(template.grid, p.marks, room.drawn_pieces, room.pattern)
+              );
+              return (
+                <div key={p.id} className="winner-check">
+                  <p className={valid ? "verdict win" : "verdict lose"}>
+                    {p.name}: {valid ? "GANÓ ✅" : "no válido ❌"}
+                  </p>
+                  <div className="actions">
+                    <button onClick={() => confirmWin(p.id, true)}>Confirmar</button>
+                    <button className="secondary" onClick={() => confirmWin(p.id, false)}>
+                      Rechazar
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
       )}
 
-      {shouting.length > 0 && templatesLoaded && (
-        <section>
-          <h2>¡Gritaron lotería!</h2>
-          {shouting.map((p) => {
-            const template = p.template_id ? templatesById[p.template_id] : null;
-            const valid = Boolean(
-              template &&
-                checkWin(template.grid, p.marks, room.drawn_pieces, room.pattern)
-            );
-            return (
-              <div key={p.id}>
-                <p>
-                  {p.name}: {valid ? "GANÓ ✅" : "no válido ❌"}
-                </p>
-                <button onClick={() => confirmWin(p.id, true)}>Confirmar</button>{" "}
-                <button onClick={() => confirmWin(p.id, false)}>Rechazar</button>
-              </div>
-            );
-          })}
-        </section>
-      )}
-
-      <p>
-        <button onClick={resetRoom}>Reiniciar partida</button>
-      </p>
+      <button className="secondary block" onClick={resetRoom}>
+        Reiniciar partida
+      </button>
     </main>
   );
 }
