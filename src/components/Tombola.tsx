@@ -14,7 +14,7 @@ export default function Tombola({ drawnPieces, onDraw, disabled }: Props) {
         Sacar ficha ({drawnPieces.length}/{DECK_IMAGES.length})
       </button>
       {last !== undefined && (
-        <div className="last-drawn">
+        <div className="last-drawn" key={last}>
           <img src={DECK_IMAGES[last].src} alt={DECK_IMAGES[last].label} />
           <p>{DECK_IMAGES[last].label}</p>
         </div>

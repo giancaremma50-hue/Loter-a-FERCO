@@ -1,12 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import QRCode from "qrcode";
 import { supabase } from "../lib/supabase";
 import { generateRoomCode } from "../lib/roomCode";
 
 export default function CreateRoom() {
-  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
-  const [code, setCode] = useState<string | null>(null);
   const [country, setCountry] = useState("GT");
   const [creating, setCreating] = useState(false);
   const navigate = useNavigate();
@@ -17,14 +14,12 @@ export default function CreateRoom() {
     const { error } = await supabase
       .from("loteria_rooms")
       .insert({ code: newCode, country, status: "waiting", pattern: "lleno" });
-    setCreating(false);
     if (error) {
+      setCreating(false);
       alert("No se pudo crear la sala: " + error.message);
       return;
     }
-    const joinUrl = `${window.location.origin}/unirse/${newCode}`;
-    setQrDataUrl(await QRCode.toDataURL(joinUrl));
-    setCode(newCode);
+    navigate(`/sala/${newCode}/admin`);
   }
 
   return (
@@ -50,20 +45,6 @@ export default function CreateRoom() {
           {creating ? "Creando..." : "Crear sala"}
         </button>
       </div>
-
-      {code && (
-        <div className="panel room-code">
-          <span className="field-label">Código de sala</span>
-          <div className="code-value">{code}</div>
-          {qrDataUrl && <img src={qrDataUrl} alt="QR para unirse" width={200} height={200} />}
-          <p className="join-link">
-            {window.location.origin}/unirse/{code}
-          </p>
-          <button className="block" onClick={() => navigate(`/sala/${code}/admin`)}>
-            Ir al panel de admin
-          </button>
-        </div>
-      )}
     </main>
   );
 }

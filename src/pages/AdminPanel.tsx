@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import QRCode from "qrcode";
 import { useRoomRealtime } from "../hooks/useRoomRealtime";
 import { supabase } from "../lib/supabase";
 import { DECK_IMAGES } from "../lib/deck";
@@ -13,6 +14,7 @@ export default function AdminPanel() {
     useRoomRealtime(code);
   const [templatesById, setTemplatesById] = useState<Record<number, CardTemplate>>({});
   const [templatesLoaded, setTemplatesLoaded] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
 
   useEffect(() => {
     supabase
@@ -25,6 +27,11 @@ export default function AdminPanel() {
         setTemplatesLoaded(true);
       });
   }, []);
+
+  useEffect(() => {
+    if (!code) return;
+    QRCode.toDataURL(`${window.location.origin}/unirse/${code}`).then(setQrDataUrl);
+  }, [code]);
 
   if (notFound) return <main className="state-message">Sala no encontrada.</main>;
   if (!room || !playersLoaded) return <main className="state-message">Cargando sala...</main>;
@@ -44,14 +51,8 @@ export default function AdminPanel() {
     if (remaining.length === 0) return;
     const next = remaining[Math.floor(Math.random() * remaining.length)];
     const drawn_pieces = [...room!.drawn_pieces, next];
-    // Local primero: si no, dos clics rápidos leen el mismo drawn_pieces
-    // viejo y el segundo pisa al primero (misma clase de bug que el
-    // toggle de marcas en PlayerBoard).
     updateLocalRoom({ drawn_pieces });
-    await supabase
-      .from("loteria_rooms")
-      .update({ drawn_pieces })
-      .eq("id", room!.id);
+    await supabase.from("loteria_rooms").update({ drawn_pieces }).eq("id", room!.id);
   }
 
   async function confirmWin(playerId: string, valid: boolean) {
@@ -79,8 +80,15 @@ export default function AdminPanel() {
       <h1>Sala {room.code}</h1>
       <p className="subtitle">Panel de administración</p>
 
+      <div className="panel room-code room-code--compact">
+        {qrDataUrl && <img src={qrDataUrl} alt="QR para unirse" width={140} height={140} />}
+        <p className="join-link">
+          Compartí: {window.location.origin}/unirse/{room.code}
+        </p>
+      </div>
+
       <div className="panel">
-        <h2>Jugadores ({players.length})</h2>
+        <h2>Paso 1 · Jugadores ({players.length})</h2>
         {players.length === 0 ? (
           <p className="subtitle">Todavía no se unió nadie.</p>
         ) : (
@@ -93,7 +101,7 @@ export default function AdminPanel() {
       </div>
 
       <div className="panel">
-        <h2>Patrón de la ronda</h2>
+        <h2>Paso 2 · Patrón y arranque</h2>
         <div className="pattern-picker">
           {(["linea", "esquinas", "lleno"] as Pattern[]).map((p) => (
             <label key={p}>
@@ -113,15 +121,21 @@ export default function AdminPanel() {
             Iniciar partida
           </button>
         )}
+        {room.status !== "waiting" && (
+          <p className="subtitle">Patrón activo: {room.pattern}</p>
+        )}
+      </div>
 
-        {room.status === "playing" && (
+      {room.status === "playing" && (
+        <div className="panel">
+          <h2>Paso 3 · Tómbola</h2>
           <Tombola
             drawnPieces={room.drawn_pieces}
             onDraw={drawPiece}
             disabled={room.drawn_pieces.length >= DECK_IMAGES.length}
           />
-        )}
-      </div>
+        </div>
+      )}
 
       {shouting.length > 0 && (
         <div className="panel">

@@ -266,6 +266,11 @@ button.shout {
   background: var(--ferco-blanco);
   overflow: hidden;
   min-height: 0;
+  transition: transform 0.15s ease-out;
+}
+
+.card-cell:active {
+  transform: scale(0.94);
 }
 
 .card-cell img:first-child {
@@ -302,6 +307,12 @@ button.shout {
   padding: 3px;
   cursor: pointer;
   min-height: 0;
+  transition: border-color 0.2s ease-out, box-shadow 0.2s ease-out,
+    transform 0.15s ease-out;
+}
+
+.template-card:active {
+  transform: scale(0.97);
 }
 
 .template-card.selected {
@@ -447,4 +458,142 @@ button.shout {
   text-align: center;
   padding: 60px 20px;
   font-size: 15px;
+}
+
+/* ---------- Motion: panel + component entrances ---------- */
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.panel {
+  animation: panel-in 0.25s cubic-bezier(0.25, 1, 0.5, 1) both;
+}
+
+@keyframes ficha-in {
+  from {
+    opacity: 0;
+    transform: scale(0.4) rotate(-12deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.card-cell .ficha {
+  animation: ficha-in 0.22s cubic-bezier(0.34, 1, 0.5, 1) both;
+}
+
+@keyframes piece-reveal {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.tombola .last-drawn {
+  animation: piece-reveal 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Compact share panel reused at the top of the admin screen */
+.room-code--compact .code-value {
+  display: none;
+}
+
+.room-code--compact img {
+  width: 140px;
+  height: 140px;
+}
+
+/* ---------- Win celebration ---------- */
+
+.confetti-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.win-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(16, 24, 32, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  cursor: pointer;
+}
+
+.win-message {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 0 24px;
+  animation: win-pop 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes win-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.win-kicker {
+  font-size: clamp(40px, 14vw, 72px);
+  font-weight: 900;
+  color: var(--ferco-amarillo);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+.win-name {
+  font-family: Arial, sans-serif;
+  font-size: clamp(18px, 5vw, 24px);
+  color: var(--ferco-blanco);
+  margin: 8px 0 0;
+}
+
+.win-hint {
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+  color: #9aa4ad;
+  margin: 24px 0 0;
+}
+
+/* ---------- Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .panel,
+  .card-cell .ficha,
+  .tombola .last-drawn,
+  .win-message {
+    animation: none !important;
+  }
+
+  button,
+  .template-card,
+  .card-cell {
+    transition: none !important;
+  }
 }
