@@ -1677,7 +1677,10 @@ git push
 - Stack (Vite/React/Supabase/QR) → Tareas 1, 2, 12.
 - 16 imágenes reales FERCO → Tarea 3.
 - Modelo de datos → Tareas 8, 9.
-- Máquina de estados (waiting/playing/verifying/reinicio) → Tareas 12, 14, 15.
+- Máquina de estados (waiting/playing/finished/reinicio a waiting) → Tareas
+  12, 14, 15. (`verifying` quedó en el tipo `RoomStatus` y el CHECK de SQL
+  por si se necesita a futuro, pero la implementación actual no lo usa: la
+  verificación se resuelve inline en `playing`, sin transición de estado.)
 - 4 pantallas → Tareas 12, 13, 14, 15.
 - Ficha de marcado (frijol) → Tareas 3, 14.
 - Casos borde (código inválido, refresh, admin cierra pestaña, doble grito) →
