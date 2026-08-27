@@ -10,23 +10,30 @@ export function checkWin(
     throw new Error("template y marks deben tener 16 casillas");
   }
 
+  // Una marca solo cuenta si la ficha que cubre realmente salió en la
+  // tómbola. Se evalúa por casilla (no se invalida el cartón entero) para
+  // que una marca perdida ajena al patrón no rechace una lotería legítima.
   const drawnSet = new Set(drawnPieces);
-  const allMarksWereDrawn = marks.every(
-    (marked, i) => !marked || drawnSet.has(template[i])
+  const effectiveMarks = marks.map(
+    (marked, i) => marked && drawnSet.has(template[i])
   );
-  if (!allMarksWereDrawn) return false;
 
-  if (pattern === "lleno") return marks.every(Boolean);
+  if (pattern === "lleno") return effectiveMarks.every(Boolean);
 
   if (pattern === "esquinas") {
-    return marks[0] && marks[3] && marks[12] && marks[15];
+    return (
+      effectiveMarks[0] &&
+      effectiveMarks[3] &&
+      effectiveMarks[12] &&
+      effectiveMarks[15]
+    );
   }
 
   const rowWin = [0, 1, 2, 3].some((r) =>
-    [0, 1, 2, 3].every((c) => marks[r * 4 + c])
+    [0, 1, 2, 3].every((c) => effectiveMarks[r * 4 + c])
   );
   const colWin = [0, 1, 2, 3].some((c) =>
-    [0, 1, 2, 3].every((r) => marks[r * 4 + c])
+    [0, 1, 2, 3].every((r) => effectiveMarks[r * 4 + c])
   );
   return rowWin || colWin;
 }
