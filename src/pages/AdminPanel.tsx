@@ -6,7 +6,7 @@ import { supabase } from "../lib/supabase";
 import { DECK_IMAGES } from "../lib/deck";
 import { checkWin } from "../lib/checkWin";
 import Tombola from "../components/Tombola";
-import type { CardTemplate, Pattern } from "../types";
+import type { CardTemplate, Pattern, Player, Winner } from "../types";
 
 export default function AdminPanel() {
   const { code } = useParams<{ code: string }>();
@@ -55,11 +55,40 @@ export default function AdminPanel() {
     await supabase.from("loteria_rooms").update({ drawn_pieces }).eq("id", room!.id);
   }
 
-  async function confirmWin(playerId: string, valid: boolean) {
+  async function confirmWin(player: Player, valid: boolean) {
     if (valid) {
       await supabase.from("loteria_rooms").update({ status: "finished" }).eq("id", room!.id);
+      await supabase.from("loteria_winners").insert({
+        room_id: room!.id,
+        player_name: player.name,
+        pattern: room!.pattern,
+      });
     }
-    await supabase.from("loteria_players").update({ shouted_at: null }).eq("id", playerId);
+    await supabase.from("loteria_players").update({ shouted_at: null }).eq("id", player.id);
+  }
+
+  async function downloadWinners() {
+    const { data, error } = await supabase
+      .from("loteria_winners")
+      .select("*")
+      .eq("room_id", room!.id)
+      .order("won_at", { ascending: true });
+    if (error) {
+      alert("No se pudo descargar: " + error.message);
+      return;
+    }
+    const rows = (data ?? []) as Winner[];
+    const header = "nombre,patron,hora\n";
+    const body = rows
+      .map((w) => `"${w.player_name.replace(/"/g, '""')}",${w.pattern},${w.won_at}`)
+      .join("\n");
+    const blob = new Blob([header + body], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `ganadores-${room!.code}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   async function resetRoom() {
@@ -77,8 +106,8 @@ export default function AdminPanel() {
 
   return (
     <main>
-      <h1>Sala {room.code}</h1>
-      <p className="subtitle">Panel de administración</p>
+      <h1>{room.name}</h1>
+      <p className="subtitle">Sala {room.code} · Panel de administración</p>
 
       <div className="panel room-code room-code--compact">
         {qrDataUrl && <img src={qrDataUrl} alt="QR para unirse" width={140} height={140} />}
@@ -155,8 +184,8 @@ export default function AdminPanel() {
                     {p.name}: {valid ? "GANÓ ✅" : "no válido ❌"}
                   </p>
                   <div className="actions">
-                    <button onClick={() => confirmWin(p.id, true)}>Confirmar</button>
-                    <button className="secondary" onClick={() => confirmWin(p.id, false)}>
+                    <button onClick={() => confirmWin(p, true)}>Confirmar</button>
+                    <button className="secondary" onClick={() => confirmWin(p, false)}>
                       Rechazar
                     </button>
                   </div>
@@ -167,9 +196,14 @@ export default function AdminPanel() {
         </div>
       )}
 
-      <button className="secondary block" onClick={resetRoom}>
-        Reiniciar partida
-      </button>
+      <div className="panel">
+        <button className="secondary block" onClick={downloadWinners}>
+          Descargar ganadores (CSV)
+        </button>
+        <button className="secondary block" onClick={resetRoom}>
+          Reiniciar partida
+        </button>
+      </div>
     </main>
   );
 }

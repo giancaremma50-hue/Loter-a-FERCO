@@ -1,5 +1,6 @@
-const IMAGE_COUNT = 16;
-const TEMPLATE_COUNT = 30;
+const IMAGE_COUNT = 24;
+const CARD_SLOTS = 16;
+const TEMPLATE_COUNT = 100;
 
 function shuffle(arr) {
   const a = [...arr];
@@ -10,11 +11,11 @@ function shuffle(arr) {
   return a;
 }
 
-const base = Array.from({ length: IMAGE_COUNT }, (_, i) => i);
+const pool = Array.from({ length: IMAGE_COUNT }, (_, i) => i);
 const seen = new Set();
 const templates = [];
 while (templates.length < TEMPLATE_COUNT) {
-  const grid = shuffle(base);
+  const grid = shuffle(pool).slice(0, CARD_SLOTS);
   const key = grid.join(",");
   if (!seen.has(key)) {
     seen.add(key);
@@ -26,4 +27,5 @@ const values = templates
   .map((grid) => `('{${grid.join(",")}}')`)
   .join(",\n  ");
 
+console.log(`delete from public.loteria_card_templates;`);
 console.log(`insert into public.loteria_card_templates (grid) values\n  ${values};`);

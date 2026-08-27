@@ -4,16 +4,22 @@ import { supabase } from "../lib/supabase";
 import { generateRoomCode } from "../lib/roomCode";
 
 export default function CreateRoom() {
+  const [name, setName] = useState("");
   const [country, setCountry] = useState("GT");
   const [creating, setCreating] = useState(false);
   const navigate = useNavigate();
 
   async function handleCreate() {
+    if (!name.trim()) return;
     setCreating(true);
     const newCode = generateRoomCode();
-    const { error } = await supabase
-      .from("loteria_rooms")
-      .insert({ code: newCode, country, status: "waiting", pattern: "lleno" });
+    const { error } = await supabase.from("loteria_rooms").insert({
+      code: newCode,
+      name: name.trim(),
+      country,
+      status: "waiting",
+      pattern: "lleno",
+    });
     if (error) {
       setCreating(false);
       alert("No se pudo crear la sala: " + error.message);
@@ -29,6 +35,15 @@ export default function CreateRoom() {
 
       <div className="panel">
         <label className="field">
+          <span className="field-label">Nombre de la partida</span>
+          <input
+            className="input"
+            placeholder="Ej. Fiestas Patrias GT 2026"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </label>
+        <label className="field">
           <span className="field-label">País</span>
           <select
             className="select"
@@ -41,7 +56,7 @@ export default function CreateRoom() {
             <option value="MX">México</option>
           </select>
         </label>
-        <button className="block" onClick={handleCreate} disabled={creating}>
+        <button className="block" onClick={handleCreate} disabled={creating || !name.trim()}>
           {creating ? "Creando..." : "Crear sala"}
         </button>
       </div>

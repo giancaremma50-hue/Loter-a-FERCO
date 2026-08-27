@@ -1,44 +1,51 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { useRoomRealtime } from "../hooks/useRoomRealtime";
 import TemplateCatalog from "../components/TemplateCatalog";
-import type { CardTemplate, Room } from "../types";
+import type { CardTemplate } from "../types";
 
 export default function JoinRoom() {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
-  const [room, setRoom] = useState<Room | null>(null);
+  const { room, players, notFound } = useRoomRealtime(code);
   const [templates, setTemplates] = useState<CardTemplate[]>([]);
   const [name, setName] = useState("");
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [joining, setJoining] = useState(false);
-  const [notFound, setNotFound] = useState(false);
+  const [joinError, setJoinError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function load() {
-      const { data: roomData } = await supabase
-        .from("loteria_rooms")
-        .select("*")
-        .eq("code", code)
-        .maybeSingle();
-      if (!roomData) {
-        setNotFound(true);
-        return;
-      }
-      setRoom(roomData as Room);
-      const { data: templateData } = await supabase
-        .from("loteria_card_templates")
-        .select("*");
-      setTemplates((templateData ?? []) as CardTemplate[]);
+    supabase
+      .from("loteria_card_templates")
+      .select("*")
+      .then(({ data }) => setTemplates((data ?? []) as CardTemplate[]));
+  }, []);
+
+  // Un cartón ya tomado por otro jugador de esta sala deja de ofrecerse —
+  // así evitamos que dos personas elijan el mismo a simple vista.
+  const takenIds = useMemo(
+    () => new Set(players.map((p) => p.template_id).filter((id): id is number => id != null)),
+    [players]
+  );
+  const available = useMemo(
+    () => templates.filter((t) => !takenIds.has(t.id)),
+    [templates, takenIds]
+  );
+
+  useEffect(() => {
+    if (selectedId !== null && takenIds.has(selectedId)) {
+      setSelectedId(null);
+      setJoinError("Ese cartón ya lo tomaron, elegí otro.");
     }
-    load();
-  }, [code]);
+  }, [selectedId, takenIds]);
 
   async function handleJoin() {
-    if (!room || !name.trim() || templates.length === 0) return;
+    if (!room || !name.trim() || available.length === 0) return;
     setJoining(true);
+    setJoinError(null);
     const templateId =
-      selectedId ?? templates[Math.floor(Math.random() * templates.length)].id;
+      selectedId ?? available[Math.floor(Math.random() * available.length)].id;
     const { data, error } = await supabase
       .from("loteria_players")
       .insert({
@@ -51,7 +58,14 @@ export default function JoinRoom() {
       .single();
     setJoining(false);
     if (error || !data) {
-      alert("No se pudo unir: " + error?.message);
+      // 23505 = violación de la restricción única (room_id, template_id):
+      // alguien más agarró ese cartón un instante antes.
+      if (error?.code === "23505") {
+        setSelectedId(null);
+        setJoinError("Justo lo tomó otra persona, elegí otro cartón.");
+      } else {
+        alert("No se pudo unir: " + error?.message);
+      }
       return;
     }
     localStorage.setItem(`loteria:${room.code}`, data.id);
@@ -63,7 +77,7 @@ export default function JoinRoom() {
 
   return (
     <main>
-      <h1>Sala {room.code}</h1>
+      <h1>{room.name}</h1>
       <p className="subtitle">Poné tu nombre y elegí tu cartón para jugar.</p>
 
       <div className="panel">
@@ -77,14 +91,23 @@ export default function JoinRoom() {
           />
         </label>
 
-        <h2>Elegí tu cartón</h2>
-        <TemplateCatalog
-          templates={templates}
-          selectedId={selectedId}
-          onSelect={setSelectedId}
-        />
+        <h2>Elegí tu cartón ({available.length} disponibles)</h2>
+        {joinError && <p className="join-error">{joinError}</p>}
+        {available.length === 0 ? (
+          <p className="subtitle">No quedan cartones disponibles en esta sala.</p>
+        ) : (
+          <TemplateCatalog
+            templates={available}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+          />
+        )}
 
-        <button className="block" onClick={handleJoin} disabled={joining || !name.trim()}>
+        <button
+          className="block"
+          onClick={handleJoin}
+          disabled={joining || !name.trim() || available.length === 0}
+        >
           {selectedId ? "Confirmar cartón" : "Sorpréndeme (aleatorio)"}
         </button>
       </div>

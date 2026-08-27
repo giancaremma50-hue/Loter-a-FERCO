@@ -4,6 +4,7 @@ export type Pattern = "linea" | "esquinas" | "lleno";
 export interface Room {
   id: string;
   code: string;
+  name: string;
   country: string | null;
   status: RoomStatus;
   pattern: Pattern;
@@ -25,4 +26,12 @@ export interface Player {
 export interface CardTemplate {
   id: number;
   grid: number[];
+}
+
+export interface Winner {
+  id: string;
+  room_id: string;
+  player_name: string;
+  pattern: string;
+  won_at: string;
 }

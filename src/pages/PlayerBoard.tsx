@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useRoomRealtime } from "../hooks/useRoomRealtime";
 import { checkWin } from "../lib/checkWin";
+import { DECK_IMAGES } from "../lib/deck";
 import CardGrid from "../components/CardGrid";
 import WinCelebration from "../components/WinCelebration";
 import type { CardTemplate } from "../types";
@@ -69,8 +70,10 @@ export default function PlayerBoard() {
   return (
     <main>
       <div className="status-bar">
-        <span className="room-tag">Sala {room.code}</span>
-        <span className="count">Fichas llamadas: {room.drawn_pieces.length} / 16</span>
+        <span className="room-tag">{room.name}</span>
+        <span className="count">
+          Fichas llamadas: {room.drawn_pieces.length} / {DECK_IMAGES.length}
+        </span>
       </div>
       <CardGrid grid={template.grid} marks={me.marks} onToggle={toggleCell} />
       <button className="shout" onClick={shoutLoteria} disabled={Boolean(me.shouted_at)}>

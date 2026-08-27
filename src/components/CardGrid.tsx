@@ -19,6 +19,7 @@ export default function CardGrid({ grid, marks, onToggle }: Props) {
           onClick={() => onToggle(i)}
         >
           <img src={DECK_IMAGES[imgIndex].src} alt={DECK_IMAGES[imgIndex].label} />
+          <span className="card-cell-label">{DECK_IMAGES[imgIndex].label}</span>
           {marks[i] && <img className="ficha" src={FICHA_SRC} alt="marcado" />}
         </button>
       ))}
