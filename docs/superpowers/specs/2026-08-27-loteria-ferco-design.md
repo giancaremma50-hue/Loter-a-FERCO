@@ -13,10 +13,12 @@
 
 ## 2. Temática de imágenes (16, 100% FERCO)
 
-Tomadas de ferco.com.gt, una por categoría real del sitio:
+Imágenes reales verificadas en ferco.com.gt (homepage, `<img>` src exacto):
 Pisos cerámicos, Pisos porcelanato, Pisos Blandos, Fachaletas, Azulejos,
-Grifería baños, Baños, Inspiración madera, Cementicios, Marmoleado,
-Decorados, Piedras, Lavamanos, Ducha, Tina, Inodoro.
+Grifería baños, Baños, Grifería cocina, Cocina, Muebles de casa, Adhesivos,
+Inspiración madera, Cementicios, Marmoleado, Decorados, Piedras.
+
+El logo Ferco GTM se usa en el header de la app, no como ficha del mazo.
 
 Ficha de marcado: imagen local del frijol (ya en el repo) — clic marca, clic de nuevo desmarca.
 
