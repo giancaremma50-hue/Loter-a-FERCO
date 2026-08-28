@@ -309,6 +309,15 @@ button.shout {
 
 /* ---------- Template catalog (join screen) ---------- */
 
+.winner-banner {
+  border-color: var(--ferco-amarillo);
+  background: var(--ferco-verde);
+}
+
+.winner-banner p {
+  margin: 0 0 4px;
+}
+
 .join-error {
   font-family: Arial, sans-serif;
   font-size: 13px;

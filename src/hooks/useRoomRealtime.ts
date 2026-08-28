@@ -11,6 +11,7 @@ export function useRoomRealtime(roomCode: string | undefined) {
   useEffect(() => {
     if (!roomCode) return;
     let roomId: string | null = null;
+    let hasConnectedOnce = false;
     // Ficha temporal para eventos de loteria_players que llegan antes de
     // que roomId se conozca (entre el subscribe() y que resuelva el fetch
     // de la sala). Sin esto se pierden silenciosamente.
@@ -26,7 +27,7 @@ export function useRoomRealtime(roomCode: string | undefined) {
       });
     }
 
-    async function init() {
+    async function fetchRoomAndPlayers() {
       const { data: roomData } = await supabase
         .from("loteria_rooms")
         .select("*")
@@ -45,7 +46,10 @@ export function useRoomRealtime(roomCode: string | undefined) {
         .eq("room_id", roomId);
       setPlayers((playerData ?? []) as Player[]);
       setPlayersLoaded(true);
+    }
 
+    async function init() {
+      await fetchRoomAndPlayers();
       for (const p of pendingPlayerEvents) {
         if (p.room_id === roomId) upsertPlayer(p);
       }
@@ -81,7 +85,17 @@ export function useRoomRealtime(roomCode: string | undefined) {
           upsertPlayer(incoming);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status !== "SUBSCRIBED") return;
+        if (hasConnectedOnce) {
+          // Reconexión después de un corte (wifi, laptop en reposo): puede
+          // haber eventos perdidos mientras estuvo desconectado. Se vuelve
+          // a traer todo en vez de confiar solo en lo que llegue de acá
+          // en adelante.
+          fetchRoomAndPlayers();
+        }
+        hasConnectedOnce = true;
+      });
 
     return () => {
       supabase.removeChannel(channel);

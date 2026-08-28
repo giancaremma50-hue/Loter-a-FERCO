@@ -15,6 +15,9 @@ export default function AdminPanel() {
   const [templatesById, setTemplatesById] = useState<Record<number, CardTemplate>>({});
   const [templatesLoaded, setTemplatesLoaded] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [confirmedWinner, setConfirmedWinner] = useState<{ name: string; pattern: Pattern } | null>(
+    null
+  );
 
   useEffect(() => {
     supabase
@@ -57,14 +60,29 @@ export default function AdminPanel() {
 
   async function confirmWin(player: Player, valid: boolean) {
     if (valid) {
-      await supabase.from("loteria_rooms").update({ status: "finished" }).eq("id", room!.id);
-      await supabase.from("loteria_winners").insert({
+      const { error: statusError } = await supabase
+        .from("loteria_rooms")
+        .update({ status: "finished" })
+        .eq("id", room!.id);
+      const { error: winnerError } = await supabase.from("loteria_winners").insert({
         room_id: room!.id,
         player_name: player.name,
         pattern: room!.pattern,
       });
+      if (statusError || winnerError) {
+        alert(
+          "No se pudo confirmar el ganador: " +
+            (statusError?.message ?? winnerError?.message)
+        );
+        return;
+      }
+      setConfirmedWinner({ name: player.name, pattern: room!.pattern });
     }
-    await supabase.from("loteria_players").update({ shouted_at: null }).eq("id", player.id);
+    const { error: clearError } = await supabase
+      .from("loteria_players")
+      .update({ shouted_at: null })
+      .eq("id", player.id);
+    if (clearError) alert("Ocurrió un error: " + clearError.message);
   }
 
   async function downloadWinners() {
@@ -92,13 +110,16 @@ export default function AdminPanel() {
   }
 
   async function resetRoom() {
+    setConfirmedWinner(null);
     await supabase
       .from("loteria_rooms")
       .update({ status: "waiting", drawn_pieces: [] })
       .eq("id", room!.id);
+    // confirmed:false hace que cada jugador vea la pantalla de "seguí con
+    // tu cartón o elegí otro" antes de la próxima ronda.
     await supabase
       .from("loteria_players")
-      .update({ marks: Array(16).fill(false), shouted_at: null })
+      .update({ marks: Array(16).fill(false), shouted_at: null, confirmed: false })
       .eq("room_id", room!.id);
   }
 
@@ -163,6 +184,16 @@ export default function AdminPanel() {
             onDraw={drawPiece}
             disabled={room.drawn_pieces.length >= DECK_IMAGES.length}
           />
+        </div>
+      )}
+
+      {confirmedWinner && (
+        <div className="panel winner-banner">
+          <p>
+            🎉 Ganador confirmado: <strong>{confirmedWinner.name}</strong> — patrón{" "}
+            {confirmedWinner.pattern}
+          </p>
+          <p className="subtitle">Podés reiniciar cuando quieras.</p>
         </div>
       )}
 

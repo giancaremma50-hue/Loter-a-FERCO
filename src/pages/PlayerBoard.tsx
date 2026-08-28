@@ -6,7 +6,10 @@ import { checkWin } from "../lib/checkWin";
 import { DECK_IMAGES } from "../lib/deck";
 import CardGrid from "../components/CardGrid";
 import WinCelebration from "../components/WinCelebration";
+import RoundConfirm from "../components/RoundConfirm";
 import type { CardTemplate } from "../types";
+
+const SHOUT_BUTTON_COVERAGE = 0.8;
 
 export default function PlayerBoard() {
   const { code } = useParams<{ code: string }>();
@@ -43,7 +46,7 @@ export default function PlayerBoard() {
   // El tablero ya tiene cartón + marcas + fichas sacadas en vivo: detecta la
   // lotería solo, sin esperar que el jugador toque un botón.
   useEffect(() => {
-    if (!me || !template || !room || wonAt) return;
+    if (!me || !me.confirmed || !template || !room || wonAt) return;
     if (me.shouted_at) {
       // Recupera la celebración si el jugador recargó la página a mitad
       // de la verificación del admin.
@@ -84,9 +87,12 @@ export default function PlayerBoard() {
     return (
       <main className="state-message">No estás en esta sala. Unite desde el link del admin.</main>
     );
+  if (!me.confirmed) return <RoundConfirm room={room} me={me} players={players} />;
   if (!template) return <main className="state-message">Cargando tu cartón...</main>;
 
   const showCelebration = Boolean(wonAt) && dismissedAt !== wonAt;
+  const coverage = room.drawn_pieces.length / DECK_IMAGES.length;
+  const showShoutButton = coverage >= SHOUT_BUTTON_COVERAGE;
 
   return (
     <main>
@@ -97,9 +103,11 @@ export default function PlayerBoard() {
         </span>
       </div>
       <CardGrid grid={template.grid} marks={me.marks} onToggle={toggleCell} />
-      <button className="shout" onClick={shoutLoteria} disabled={Boolean(me.shouted_at)}>
-        {me.shouted_at ? "Esperando confirmación..." : "¡Lotería!"}
-      </button>
+      {showShoutButton && (
+        <button className="shout" onClick={shoutLoteria} disabled={Boolean(me.shouted_at)}>
+          {me.shouted_at ? "Esperando confirmación..." : "¡Lotería!"}
+        </button>
+      )}
 
       {showCelebration && (
         <WinCelebration
